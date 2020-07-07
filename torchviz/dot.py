@@ -88,13 +88,15 @@ def make_dot_wshape(model, x):
     if isinstance(var1, tuple):
         var = var1[0]
     elif isinstance(var1, dict):
+        # if dict convert to tuple
         outputList = []
         for key, value in var1.items():
             outputList.append(value)
         outputList = tuple(outputList)
         var1 = outputList
         var = var1[0]
-
+    elif isinstance(var1, torch.Tensor):
+        var = var1
 
     params = dict(model.named_parameters())
     if params is not None:
@@ -113,7 +115,10 @@ def make_dot_wshape(model, x):
     def size_to_str(size):
         return '(' + (', ').join(['%d' % v for v in size]) + ')'
 
-    output_nodes = (var1.grad_fn,) if not isinstance(var1, tuple) else tuple(v.grad_fn for v in var1)
+    if isinstance(var1, torch.Tensor):
+        output_nodes = (var1.grad_fn,)
+    elif isinstance(var1, tuple):
+        output_nodes = tuple(v.grad_fn for v in var1)
 
     def add_nodes(var, grad=torch.zeros_like(var)):
         if var not in seen:
@@ -161,7 +166,6 @@ def make_dot_wshape(model, x):
     resize_graph(dot)
 
     return dot
-
 
 # For traces
 
