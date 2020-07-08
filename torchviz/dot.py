@@ -83,9 +83,8 @@ def make_dot_wshape(model, x):
         x: input tensor
     """
     var1 = model(x)
-
     # TODO: Current temp solution to work around requiring var as Tensor
-    if isinstance(var1, tuple):
+    if isinstance(var1, tuple) or isinstance(var1, list):
         var = var1[0]
     elif isinstance(var1, dict):
         # if dict convert to tuple
@@ -117,7 +116,7 @@ def make_dot_wshape(model, x):
 
     if isinstance(var1, torch.Tensor):
         output_nodes = (var1.grad_fn,)
-    elif isinstance(var1, tuple):
+    elif isinstance(var1, tuple) or isinstance(var1, list):
         output_nodes = tuple(v.grad_fn for v in var1)
 
     def add_nodes(var, grad=torch.zeros_like(var)):
@@ -157,7 +156,7 @@ def make_dot_wshape(model, x):
                     add_nodes(t, grad)
 
     # handle multiple outputs
-    if isinstance(var1, tuple):
+    if isinstance(var1, tuple) or isinstance(var1, list):
         for v in var1:
             add_nodes(v.grad_fn, grad=torch.zeros_like(v))
     else:
